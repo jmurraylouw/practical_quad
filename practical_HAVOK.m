@@ -1,17 +1,60 @@
-%% Implentation of Hankel Alternative View Of Koopman for 2D Drone
+%% Implentation of HAVOK on data from practical HoneyBee flight data
 % close all;
+disp('start')
 
-% % Extract data
-% simulation_data_file = 'With_payload_and_noise_data_1';
-% load(['Data/', simulation_data_file, '.mat']) % Load simulation data
-% 
+% Load topics from csv into matrix
+csv_folder = "/home/murray/Documents/QGroundControl/Logs/HoneyBee/2021-02-26_Smokey_day_baro_test_flights/csv";
+log_name = "log_73_2021-2-26-14-53-08";
+
+% adc_report = readmatrix(strcat(csv_folder, '/', log_name, '_', 'adc_report', '_0.csv'));
+estimator_status = readmatrix(strcat(csv_folder, '/', log_name, '_', 'estimator_status', '_0.csv'));
+position_setpoint_triplet = readmatrix(strcat(csv_folder, '/', log_name, '_', 'position_setpoint_triplet', '_0.csv'));
+
+%% figure out timestamp sync!!!!
+
+% Payload angles
+% alpha = adc_report(:,3+3); % forwards backwards payload angle (3+ to convert Channel_ID of adc_report to index)
+% beta  = adc_report(:,3+10); % side to side payload angle
+
+% Convert quaternions to euler angles
+quaternions = estimator_status(:,0:3 + 2); % +2 to use index from https://docs.px4.io/master/en/advanced_config/tuning_the_ecl_ekf.html
+euler_angles = quat2eul(quaternions); % [X, Y, Z], using ZYX convention
+
+% plot(euler_angles);
+% legend('X', 'Y', 'Z');
+
+% Velocity
+velocity = estimator_status(:,4:6 + 2); % [dx, dy, dz]
+
+% Position
+position = estimator_status(:,7:9 + 2); % [x, y, z]
+
+% Populate matrix with state vector for every timestamp
+state_time = estimator_status(:,1)./1e6; % Timestamp of state data in seconds
+state_data = [euler_angles, velocity, position]; % State data in columns. Each coumn is a variable
+state_ts   = timeseries(state_data, state_time); % Time series of states
+
+% Input data
+input_time = position_setpoint_triplet(:,42)./1e6; % current.timestamp. Timestamp of input data in seconds
+input_data = position_setpoint_triplet(:,45:47); % current.x , .y , .z. % Input data in columns. Each coumn is a variable
+
+input_offset = mean(input_data,1); % Input needed to keep at a fixed points ??? Should this not be zero?
+input_data  = input_data - input_offset; % Adjust for unmeasured input
+
+input_ts   = timeseries(input_data, input_time); % Time series of input data
+
+% Data dimentions
+nx = size(state_data,2); % number of states
+nu = size(input_data,2); % number of measurements
+
+% HAVOK
+
 % Ts = 0.03;     % Desired sample time
 % Ts_havok = Ts;
-% y_rows = 1:4;
 % 
 % % Adjust for constant disturbance / mean control values
 % % u_bar = mean(out.u.Data,1); % Input needed to keep at a fixed point
-% u_bar = [0, (m + M)*g];
+
 % out.u.Data  = out.u.Data - u_bar; % Adjust for unmeasured input
 
 % Training data
@@ -36,16 +79,6 @@
 % y_test = x_test(y_rows,:); % One sample of testing data overlaps for initial condition
 % u_test = u_test.Data';
 % 
-% % Data dimentions
-% nx = size(x_train,1); % number of states
-% ny = size(y_train,1); % number of measurements
-% nu = size(u_train,1); % number of inputs
-
-% % Add noise
-% rng('default');
-% rng(1); % Repeatable random numbers
-% sigma = 0.001; % Noise standard deviation
-% y_train = y_train + sigma*randn(size(y_train));
 
 % comment = ''; % Extra comment to differentiate this run
 % 
