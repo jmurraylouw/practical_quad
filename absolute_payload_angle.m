@@ -20,6 +20,9 @@ uav_quat_ts   = timeseries(uav_quat, state_time, 'Name', 'Attitude'); % Time ser
 disp('state time series')
 
 %% Joystick attitude
+
+%% ??? Remeber to calibrate joystick and convert reading to radians
+
 adc_time = adc_report(:,1)./1e6; % Timestamp of adc_report in seconds
 
 % Define payload angle as euler angle, convention: 'XYZ'. 
@@ -41,6 +44,7 @@ disp('joystick time series')
 payload_abs_rot = quatmultiply(uav_quat,joy_quat); % absolute rotation of payload. First joystick rotation. Then UAV attitude rotation
 payload_vector = quatrotate(payload_abs_rot, [0 0 1]); % Rotate neutral hanging payload by joystick angle, then attitude
 
+%% ??? test this method with known rotations
 %% Plots
 close all;
 
