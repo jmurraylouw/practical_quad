@@ -46,6 +46,7 @@ ch = 2; % ch = 2 has least noise. choose which 3.3V report channel. 2 = ch 10, 3
 
 adc_line_fit = polyfit(manual_input(:,ch), manual_input(:,1), 1); % line fit for adc2angle
 adc2angle = @(adc) polyval(adc_line_fit, adc); % Convert green adc value to angle [degrees]
+adc2angle(1957)
 
 angle_line_fit = polyfit(manual_input(:,1), manual_input(:,ch), 1); % line fit for angle2adc
 angle2adc = @(angle) polyval(angle_line_fit, angle); % Convert green adc value to angle [degrees]
@@ -56,6 +57,6 @@ plot(manual_input(:,1), manual_input(:,ch), 'x')
 hold on
 x_range = linspace(min(manual_input(:,1)), max(manual_input(:,1)), 100);
 plot(x_range, angle2adc(x_range))
-title(['green pot manual readings, ch = ', num2str(ch)])
+title(['blue pot manual readings, ch = ', num2str(ch)])
 ylabel('adc reading')
 xlabel('Angle [degrees]')
