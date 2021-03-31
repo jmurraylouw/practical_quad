@@ -1,19 +1,19 @@
 %% Blue
-log_name = "log_347_2021-3-31-16-09-42";
-topic = "adc_report";
-directory = "/home/murray/OneDrive/Masters/QGroundControl/Logs/HoneyBee/2021-03-29_calibrate_pot_blue";
-filename = strcat(directory, "/", log_name, "_", topic, "_0", ".csv");
-csv_matrix = readmatrix(filename);
-
-timestamp = csv_matrix(:,1).*1e-6; % in seconds
-raw_data = csv_matrix(:,3:14);
-
-close all;
-channels = [4,10]; % Channel 10 = 3.3V, Channel 4 = 6.6V
-for i = channels
-    figure(i+1);
-    plot(timestamp, raw_data(:,i+1)) % +1 to convert channel ID to MATLAB index
-end
+% log_name = "log_347_2021-3-31-16-09-42";
+% topic = "adc_report";
+% directory = "/home/murray/OneDrive/Masters/QGroundControl/Logs/HoneyBee/2021-03-29_calibrate_pot_blue";
+% filename = strcat(directory, "/", log_name, "_", topic, "_0", ".csv");
+% csv_matrix = readmatrix(filename);
+% 
+% timestamp = csv_matrix(:,1).*1e-6; % in seconds
+% raw_data = csv_matrix(:,3:14);
+% 
+% close all;
+% channels = [4,10]; % Channel 10 = 3.3V, Channel 4 = 6.6V
+% for i = channels
+%     figure(i+1);
+%     plot(timestamp, raw_data(:,i+1)) % +1 to convert channel ID to MATLAB index
+% end
 
 % Manual measurements
 % Take stick to angle on protractor
