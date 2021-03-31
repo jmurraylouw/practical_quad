@@ -46,7 +46,7 @@ line_fit = polyfit(manual_input(:,2), manual_input(:,1), 1);
 
 green_adc2angle = @(adc) polyval(line_fit, adc); % Convert green adc value to angle [degrees]
 
-angle = green_adc2angle(882)
+angle = green_adc2angle(2)
 
 % Plot range
 figure
