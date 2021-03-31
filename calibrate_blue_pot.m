@@ -45,8 +45,8 @@ manual_input(:,1) = manual_input(:,1) - 90; % Convert to 0 deg = down
 ch = 2; % ch = 2 has least noise. choose which 3.3V report channel. 2 = ch 10, 3 = ch 11
 
 adc_line_fit = polyfit(manual_input(:,ch), manual_input(:,1), 1); % line fit for adc2angle
-blue_adc2angle = @(adc) polyval(adc_line_fit, adc); % Convert green adc value to angle [degrees]
-angle = blue_adc2angle(71)
+adc2angle = @(adc) polyval(adc_line_fit, adc); % Convert green adc value to angle [degrees]
+angle = adc2angle(71)
 
 angle_line_fit = polyfit(manual_input(:,1), manual_input(:,ch), 1); % line fit for angle2adc
 angle2adc = @(angle) polyval(angle_line_fit, angle); % Convert green adc value to angle [degrees]
