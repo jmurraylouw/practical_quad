@@ -3,17 +3,19 @@
 disp('start')
 
 %% Load topics from csv into matrix
-[ulog_name,csv_folder] = uigetfile('/home/esl/Masters/QGroundControl/Logs/HoneyBee/*.ulg', 'Choose ulog file to access') % GUI to choose ulog file. % [ulog filename, path to folder with csv files]
-ulog_name = erase(ulog_name, '.ulg'); % remove file extention
+load_csv_again = 0;
+if load_csv_again
+    [ulog_name,csv_folder] = uigetfile('/home/esl/Masters/QGroundControl/Logs/HoneyBee/*.ulg', 'Choose ulog file to access') % GUI to choose ulog file. % [ulog filename, path to folder with csv files]
+    ulog_name = erase(ulog_name, '.ulg'); % remove file extention
 
-% csv_folder = "/home/esl/Masters/QGroundControl/Logs/HoneyBee/2021-04-06_check_pots_in_lab";
-% log_name = "log_354_2021-4-6-17-03-48";
+    % csv_folder = "/home/esl/Masters/QGroundControl/Logs/HoneyBee/2021-04-06_check_pots_in_lab";
+    % log_name = "log_354_2021-4-6-17-03-48";
 
-adc_report = readmatrix(strcat(csv_folder, '/', log_name, '_', 'adc_report', '_0.csv'));
-estimator_status = readmatrix(strcat(csv_folder, '/', log_name, '_', 'estimator_status', '_0.csv'));
+    adc_report = readmatrix(strcat(csv_folder, ulog_name, '_', 'adc_report', '_0.csv'));
+    estimator_status = readmatrix(strcat(csv_folder, ulog_name, '_', 'estimator_status', '_0.csv'));
 
-disp('loaded csv files')
-
+    disp('loaded csv files')
+end
 %% Time matching
 % have common time series so no extrapolation occurs between timeseries
 
@@ -36,25 +38,36 @@ uav_quat    = uav_quat_ts.Data; % Data from resampled timeseries
 
 disp('state time series')
 
+%% Attitude
+euler_angles = rad2deg(quat2eul(uav_quat, 'ZYX')); % [X, Y, Z] angles in radians, using XYZ convention
+euler_angles_ts = timeseries(euler_angles, combo_time, 'Name', 'euler_angles'); % Time series of euler angles of drone
+
+axang = quat2axang(uav_quat); % Axis angle representation of attitude
+axang_ts   = timeseries(axang, combo_time, 'Name', 'axang'); % Time series of axis angle attitude of drone
+
+
 %% Joystick attitude
 
 % Convertion from adc value to radians
 green_pot_line_fit = [ 0.038980944549164 -37.789860132384199]; % degrees linefit for polyval from calibration of pot connected to green wire
 blue_pot_line_fit  = [ 0.018768173769117 -37.181837589261562];
 
-green_adc2angle = @(adc) deg2rad(polyval(green_pot_line_fit, adc)); % Convert green adc value to angle [rad]
-blue_adc2angle  = @(adc) deg2rad(polyval(blue_pot_line_fit,  adc)); % Convert green adc value to angle [rad]
+offset_y = -0.033242678592147; % [degrees] Offset calculated afterwards
+offset_x = -0.037739964002411; % [degrees] Offset calculated afterwards
+
+green_adc2angle = @(adc) deg2rad(polyval(green_pot_line_fit, adc)) - offset_y; % Convert green adc value to angle [rad]
+blue_adc2angle  = @(adc) deg2rad(polyval(blue_pot_line_fit,  adc)) - offset_x; % Convert green adc value to angle [rad]
 
 % Define payload angle as euler angle, convention: 'XYZ'. 
 % joystick x-axis connected to drone.
 % joystick y-axis connected to x-axis
 % z-axis does not matter
-j_x = green_adc2angle(adc_report(:,3+2)); % [radians] Euler x angle of joystick. (side to side) (3+ to convert Channel_ID of adc_report to index)
-j_y = blue_adc2angle(adc_report(:,3+10)); % [radians] Euler y angle of joystick. (forwards backwards)
+j_y = green_adc2angle(adc_report(:,3+4)); % [radians] Euler y angle of joystick. (side to side) (3+ to convert Channel_ID of adc_report to index)
+j_x = blue_adc2angle(adc_report(:,3+10)); % [radians] Euler x angle of joystick. (forwards backwards)
 j_z = zeros(size(j_y)); % No z angle
 joy_euler = [j_x, j_y, j_z]; % Euler angles of joystick
 
-joy_quat    = eul2quat(joy_euler, 'ZYX');
+joy_quat    = eul2quat(joy_euler, 'XYZ');
 joy_quat_ts = timeseries(joy_quat, adc_time, 'Name', 'Attitude'); % Time series of euler angles of drone
 
 joy_quat_ts = resample(joy_quat_ts, combo_time, 'linear'); % Resample for matching time sequence
@@ -73,6 +86,14 @@ payload_vector_angles = [payload_vector_angle_x, payload_vector_angle_y]; % [rad
 %% Plots
 close all;
 
+% figure;
+% plot(combo_time, uav_quat);
+% title('uav_quat');
+% 
+% figure;
+% plot(combo_time, joy_quat);
+% title('joy_quat');
+
 figure;
 plot(combo_time, rad2deg(payload_vector));
 legend('x', 'y', 'z');
@@ -82,8 +103,7 @@ figure;
 plot(combo_time, rad2deg(payload_vector_angles));
 legend('x', 'y');
 title('payload_vector_angles');
-
-stop
+% 
 %%
 figure;
 plot(adc_time, rad2deg(j_x));
@@ -92,6 +112,22 @@ title('j_x');
 figure;
 plot(adc_time, rad2deg(j_y));
 title('j_y');
+% 
+% %%
+% figure;
+% title('euler angles');
+% plot(euler_angles_ts);
+% legend('X', 'Y', 'Z');
+% 
+% figure;
+% title('axang');
+% plot(axang_ts);
+% legend('X', 'Y', 'Z', 'theta');
+% 
+% figure;
+% title('axang');
+% plot(axang_ts);
+% legend('X', 'Y', 'Z', 'theta');
 
 % 
 % figure;
