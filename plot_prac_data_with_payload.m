@@ -26,7 +26,7 @@ disp('payload time series')
 state_time = estimator_status(:,1)./1e6; % Timestamp of state data in seconds
 
 quaternions = estimator_status(:, (0:3) + 2); % +2 to use index from https://docs.px4.io/master/en/advanced_config/tuning_the_ecl_ekf.html
-euler_angles = quat2eul(quaternions, 'XYZ'); % [X, Y, Z] angles in radians, using XYZ convention
+euler_angles = quat2eul(quaternions, 'ZYX'); % [X, Y, Z] angles in radians, using ZYX convention
 attitude_ts   = timeseries(euler_angles, state_time, 'Name', 'Attitude'); % Time series of euler angles of drone
 
 velocity = estimator_status(:,(4:6) + 2); % [dx, dy, dz]
