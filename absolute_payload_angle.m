@@ -77,7 +77,7 @@ disp('joystick time series')
 
 %% Payload attitude
 payload_abs_rot = quatmultiply(uav_quat,joy_quat); % absolute rotation of payload. First joystick rotation. Then UAV attitude rotation
-payload_vector  = quatrotate(payload_abs_rot, [0 0 1]); % unit vector representing direction of payload. Rotate neutral hanging payload by joystick angle, then attitude
+payload_vector  = quatrotate(quatinv(payload_abs_rot), [0 0 1]); % unit vector representing direction of payload. Rotate neutral hanging payload by joystick angle, then attitude. % "quatrotate" rotates the coordinate frame, not the vector, therefore use inverse in function (https://www.mathworks.com/matlabcentral/answers/465053-rotation-order-of-quatrotate)
 payload_vector_angle_x = -atan2(payload_vector(:,2), payload_vector(:,3)); % [radians] absolute angle of payload vector from z axis, about the x axis, projected on yz plane. NOT euler angle. negative, becasue +y gives negative rotation about x
 payload_vector_angle_y =  atan2(payload_vector(:,1), payload_vector(:,3)); % [radians] absolute angle of payload vector from z axis, about the y axis, projected on xz plane. NOT euler angle
 

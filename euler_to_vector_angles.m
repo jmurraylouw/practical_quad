@@ -9,7 +9,7 @@ rot_ans = (eul2rotm(euler_angles, 'ZYX')*vect')'
 
 euler_angles = [z, y, x];
 quat = eul2quat(euler_angles, 'ZYX')
-quat_ans = quatrotate(quatinv(quat), vect) % "quatrotate" rotates the coordinate frame, not the vector (https://www.mathworks.com/matlabcentral/answers/465053-rotation-order-of-quatrotate)
+quat_ans = quatrotate(quatinv(quat), vect) % "quatrotate" rotates the coordinate frame, not the vector, therefore use inverse in function (https://www.mathworks.com/matlabcentral/answers/465053-rotation-order-of-quatrotate)
 
 rot_ans - quat_ans
 
