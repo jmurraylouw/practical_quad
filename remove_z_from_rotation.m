@@ -1,16 +1,16 @@
+
+quat_rot_vect = @(vect, quat) quatrotate(quatinv(quat), vect); % Rotates vector by quaternion % built in "quatrotate" rotates the coordinate frame, not the vector, therefore use inverse in function (https://www.mathworks.com/matlabcentral/answers/465053-rotation-order-of-quatrotate)
+
 % Euler angles
 x = deg2rad(30);
 y = deg2rad(20);
 z = deg2rad(10);
 
-vect = [1 0 0];
-
-euler_angles = [z, y, x];
-rot_ans = (eul2rotm(euler_angles, 'ZYX')*vect')'
+vect = [0 0 1];
 
 euler_angles = [z, y, x];
 quat = eul2quat(euler_angles, 'ZYX')
-quat_ans = quatrotate(quatinv(quat), vect) % "quatrotate" rotates the coordinate frame, not the vector, therefore use inverse in function (https://www.mathworks.com/matlabcentral/answers/465053-rotation-order-of-quatrotate)
+quat_ans = quat_rot_vect(vect, quat) % Rotate vector by quaternion
 
 rot_ans - quat_ans
 

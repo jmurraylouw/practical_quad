@@ -38,12 +38,21 @@ uav_quat    = uav_quat_ts.Data; % Data from resampled timeseries
 
 disp('state time series')
 
-%% Attitude
-euler_angles = rad2deg(quat2eul(uav_quat, 'ZYX')); % [X, Y, Z] angles in radians, using XYZ convention
-euler_angles_ts = timeseries(euler_angles, combo_time, 'Name', 'euler_angles'); % Time series of euler angles of drone
+%% Remove Z of uav attitude
 
-axang = quat2axang(uav_quat); % Axis angle representation of attitude
-axang_ts   = timeseries(axang, combo_time, 'Name', 'axang'); % Time series of axis angle attitude of drone
+uav_euler = rad2deg(quat2eul(uav_quat, 'ZYX')); % [Z, X, Y] angles in radians, using XYZ convention
+uav_euler_ts = timeseries(uav_euler, combo_time, 'Name', 'euler_angles'); % Time series of euler angles of drone
+
+uav_yx_euler = uav_euler; % UAV attitude in local frame, i.e. inertial Z rotation removed
+uav_yx_euler(:,1) = 0;
+
+uav_yx_quat = eul2quat(uav_yx_euler); % UAV quaternion in local frame, i.e. inertial Z rotation removed
+
+uav_vector  = quatrotate(quatinv(uav_yx_quat), [0 0 1]); % unit vector representing direction of payload. Rotate neutral hanging payload by joystick angle, then attitude. % "quatrotate" rotates the coordinate frame, not the vector, therefore use inverse in function (https://www.mathworks.com/matlabcentral/answers/465053-rotation-order-of-quatrotate)
+uav_vector_angle_x = -atan2(uav_vector(:,2), uav_vector(:,3)); % [radians] absolute angle of payload vector from z axis, about the x axis, projected on yz plane. NOT euler angle. negative, becasue +y gives negative rotation about x
+uav_vector_angle_y =  atan2(uav_vector(:,1), uav_vector(:,3)); % [radians] absolute angle of payload vector from z axis, about the y axis, projected on xz plane. NOT euler angle
+
+uav_vector_angles = [uav_vector_angle_x, uav_vector_angle_y]; % [radians] [x, y] absolute angle of payload vector. NOT euler angles
 
 
 %% Joystick attitude
@@ -52,10 +61,10 @@ axang_ts   = timeseries(axang, combo_time, 'Name', 'axang'); % Time series of ax
 green_pot_line_fit = [ 0.038980944549164 -37.789860132384199]; % degrees linefit for polyval from calibration of pot connected to green wire
 blue_pot_line_fit  = [ 0.018768173769117 -37.181837589261562];
 
-offset_y = 0.03; %-0.033242678592147; % [degrees] Offset calculated afterwards
-offset_x = -0.025; % -0.037739964002411; % [degrees] Offset calculated afterwards
+offset_y = -0.0685; %-0.033242678592147; % [degrees] Offset calculated afterwards
+offset_x = -0.013; % -0.037739964002411; % [degrees] Offset calculated afterwards
 
-green_adc2angle = @(adc) -deg2rad(polyval(green_pot_line_fit, adc)) - offset_y; % Convert green adc value to angle [rad]
+green_adc2angle = @(adc) deg2rad(polyval(green_pot_line_fit, adc)) - offset_y; % Convert green adc value to angle [rad]
 blue_adc2angle  = @(adc) deg2rad(polyval(blue_pot_line_fit,  adc)) - offset_x; % Convert green adc value to angle [rad]
 
 % Define payload angle as euler angle, convention: 'XYZ'. 
@@ -93,9 +102,18 @@ close all;
 % figure;
 % plot(combo_time, joy_quat);
 % title('joy_quat');
+figure;
+plot(combo_time, (uav_vector));
+legend('x', 'y', 'z');
+title('uav_vector');
 
 figure;
-plot(combo_time, rad2deg(payload_vector));
+plot(combo_time, rad2deg(uav_vector_angles));
+legend('x', 'y', 'z');
+title('uav_vector_angles');
+
+figure;
+plot(combo_time, (payload_vector));
 legend('x', 'y', 'z');
 title('payload_vector');
 
@@ -113,17 +131,18 @@ figure;
 plot(adc_time, (j_y));
 title('j_y');
 % 
-% %%
-% figure;
-% title('euler angles');
-% plot(euler_angles_ts);
-% legend('X', 'Y', 'Z');
-% 
+%%
+figure;
+title('euler angles');
+plot(uav_euler_ts);
+legend('Z', 'Y', 'X');
+
+%%
 % figure;
 % title('axang');
 % plot(axang_ts);
 % legend('X', 'Y', 'Z', 'theta');
-% 
+
 % figure;
 % title('axang');
 % plot(axang_ts);
