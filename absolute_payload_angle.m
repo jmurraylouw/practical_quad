@@ -52,10 +52,10 @@ axang_ts   = timeseries(axang, combo_time, 'Name', 'axang'); % Time series of ax
 green_pot_line_fit = [ 0.038980944549164 -37.789860132384199]; % degrees linefit for polyval from calibration of pot connected to green wire
 blue_pot_line_fit  = [ 0.018768173769117 -37.181837589261562];
 
-offset_y = -0.033242678592147; % [degrees] Offset calculated afterwards
-offset_x = -0.037739964002411; % [degrees] Offset calculated afterwards
+offset_y = 0.03; %-0.033242678592147; % [degrees] Offset calculated afterwards
+offset_x = -0.025; % -0.037739964002411; % [degrees] Offset calculated afterwards
 
-green_adc2angle = @(adc) deg2rad(polyval(green_pot_line_fit, adc)) - offset_y; % Convert green adc value to angle [rad]
+green_adc2angle = @(adc) -deg2rad(polyval(green_pot_line_fit, adc)) - offset_y; % Convert green adc value to angle [rad]
 blue_adc2angle  = @(adc) deg2rad(polyval(blue_pot_line_fit,  adc)) - offset_x; % Convert green adc value to angle [rad]
 
 % Define payload angle as euler angle, convention: 'XYZ'. 
@@ -65,7 +65,7 @@ blue_adc2angle  = @(adc) deg2rad(polyval(blue_pot_line_fit,  adc)) - offset_x; %
 j_y = green_adc2angle(adc_report(:,3+4)); % [radians] Euler y angle of joystick. (side to side) (3+ to convert Channel_ID of adc_report to index)
 j_x = blue_adc2angle(adc_report(:,3+10)); % [radians] Euler x angle of joystick. (forwards backwards)
 j_z = zeros(size(j_y)); % No z angle
-joy_euler = [j_x, j_y, j_z]; % Euler angles of joystick
+joy_euler = [j_z, j_y, j_x]; % Euler angles of joystick % MATLAB euler format is [z, y, x]
 
 joy_quat    = eul2quat(joy_euler, 'XYZ');
 joy_quat_ts = timeseries(joy_quat, adc_time, 'Name', 'Attitude'); % Time series of euler angles of drone
@@ -106,11 +106,11 @@ title('payload_vector_angles');
 % 
 %%
 figure;
-plot(adc_time, rad2deg(j_x));
+plot(adc_time, (j_x));
 title('j_x');
 
 figure;
-plot(adc_time, rad2deg(j_y));
+plot(adc_time, (j_y));
 title('j_y');
 % 
 % %%
