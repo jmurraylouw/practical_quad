@@ -1,8 +1,8 @@
-x = deg2rad(60);
-y = deg2rad(70);
-z = deg2rad(80);
+x = deg2rad(30);
+y = deg2rad(20);
+z = deg2rad(10);
 
-vect = [0 0 1];
+vect = [1 0 0];
 
 euler_angles = [z, y, x];
 rot_ans = (eul2rotm(euler_angles, 'ZYX')*vect')'
