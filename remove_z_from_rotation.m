@@ -5,11 +5,12 @@ disp('start')
 
 rng(1)
 %% Attitude
-z = deg2rad(randn*10*2525264225);
-y = deg2rad(randn*10);
-x = deg2rad(randn*10);
+z = deg2rad(45);
+y = deg2rad(45);
+x = deg2rad(15);
 
 uav_quat    = eul2quat([z, y, x]);
+
 uav_vector  = quat_rot_vect([0 0 1], uav_quat); % unit vector representing direction of payload. Rotate neutral hanging payload by joystick angle, then attitude. % "quatrotate" rotates the coordinate frame, not the vector, therefore use inverse in function (https://www.mathworks.com/matlabcentral/answers/465053-rotation-order-of-quatrotate)
 
 %% Remove Z of uav attitude
