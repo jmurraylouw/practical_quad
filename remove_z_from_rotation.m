@@ -1,20 +1,38 @@
 
+%% Project payload angles to absolute coordinate frame 
+
+disp('start')
+
+rng(1)
+%% Attitude
+z = deg2rad(randn*10*2525264225);
+y = deg2rad(randn*10);
+x = deg2rad(randn*10);
+
+uav_quat    = eul2quat([z, y, x]);
+uav_vector  = quat_rot_vect([0 0 1], uav_quat); % unit vector representing direction of payload. Rotate neutral hanging payload by joystick angle, then attitude. % "quatrotate" rotates the coordinate frame, not the vector, therefore use inverse in function (https://www.mathworks.com/matlabcentral/answers/465053-rotation-order-of-quatrotate)
+
+%% Remove Z of uav attitude
+
 quat_rot_vect = @(vect, quat) quatrotate(quatinv(quat), vect); % Rotates vector by quaternion % built in "quatrotate" rotates the coordinate frame, not the vector, therefore use inverse in function (https://www.mathworks.com/matlabcentral/answers/465053-rotation-order-of-quatrotate)
+heading = quat2heading(uav_quat);
+quat_inv_heading = quatinv(eul2quat([heading, 0, 0])); % inverse of quat of heading 
 
-% Euler angles
-x = deg2rad(30);
-y = deg2rad(20);
-z = deg2rad(10);
+%% Joystick attitude
+z = deg2rad(0);
+y = deg2rad(randn*10);
+x = deg2rad(randn*10);
 
-vect = [0 0 1];
+joy_euler = [z, y, x];
 
-euler_angles = [z, y, x];
-quat = eul2quat(euler_angles, 'ZYX')
-quat_ans = quat_rot_vect(vect, quat) % Rotate vector by quaternion
+joy_quat    = eul2quat(joy_euler, 'XYZ');
 
-rot_ans - quat_ans
+%% Payload attitude
 
-payload_vector_angle_x = -atan2(quat_ans(:,2), quat_ans(:,3)); % [radians] absolute angle of payload vector from z axis, about the x axis, projected on yz plane. NOT euler angle. negative, becasue +y gives negative rotation about x
-payload_vector_angle_y =  atan2(quat_ans(:,1), quat_ans(:,3)); % [radians] absolute angle of payload vector from z axis, about the y axis, projected on xz plane. NOT euler angle
+payload_abs_rot = quatmultiply(uav_quat, joy_quat); % Attitude of payload in World frame. First joystick rotation. Then UAV attitude rotation
+payload_abs_rot = quatmultiply(quat_inv_heading, payload_abs_rot); % Attitude of payload in Loacl frame (world with local heading). World frame, then inverse heading
 
-payload_vector_angles = [payload_vector_angle_x, payload_vector_angle_y]; % [radians] [x, y] absolute angle of payload vector. NOT euler angles
+payload_vector  = quatrotate(quatinv(payload_abs_rot), [0 0 1]) % unit vector representing direction of payload. Rotate neutral hanging payload by joystick angle, then attitude. % "quatrotate" rotates the coordinate frame, not the vector, therefore use inverse in function (https://www.mathworks.com/matlabcentral/answers/465053-rotation-order-of-quatrotate)
+
+
+
